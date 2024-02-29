@@ -30,9 +30,9 @@ public class PlayerMovement : MonoBehaviour
     {
         m_Animator = GetComponent<Animator>();
 
-        m_Speed = 1110.0f;
-        m_RotationSpeed = 1110.0f;
-        m_MaxSpeed = 11110.0f;
+        m_Speed = 0f;
+        m_RotationSpeed = 0f;
+        m_MaxSpeed = 5f;
         m_MaxRotationSpeed = 11180.0f;
         m_RotationDamping = 10.0f;
         m_RotationAcceleration = 90.0f;
