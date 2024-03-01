@@ -1,6 +1,6 @@
-#define USE_MRU
+//#define USE_MRU
 //#define USE_MRUA
-//#define USE_RIGIDBODY
+#define USE_RIGIDBODY
 
 using System;
 using System.Collections;
@@ -14,10 +14,12 @@ public class PlayerMovement : MonoBehaviour
 
     public PlayerInput m_PlayerInput;
 
-    private bool m_ShootPressed = false;
+    //private bool m_ShootPressed = false;
     public Vector2 m_MoveInput = Vector2.zero;
+    public bool m_ShiftPressed = false;
 
     public float m_Speed = 10f;
+    public float m_SpeedMultiplier = 2f;
     public float m_MaxSpeed = 10.0f;
     public float m_Acceleration = 1.0f;
     public float m_Deceleration = 1.0f;
@@ -34,9 +36,10 @@ public class PlayerMovement : MonoBehaviour
     {
         m_Animator = GetComponent<Animator>();
 
-        m_Speed = 0f;
-        m_RotationSpeed = 0f;
-        m_MaxSpeed = 5f;
+        m_Speed = 10000f;
+        m_SpeedMultiplier = 1f;
+        m_RotationSpeed = 10000f;
+        m_MaxSpeed = 10000f;
         m_MaxRotationSpeed = 11180.0f;
         m_RotationDamping = 10.0f;
         m_RotationAcceleration = 90.0f;
@@ -74,11 +77,22 @@ public class PlayerMovement : MonoBehaviour
     private void Inputs()
     {
         m_MoveInput = m_PlayerInput.actions["Move"].ReadValue<Vector2>();
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            m_ShiftPressed = true;
+        }
+        else
+        {
+            m_ShiftPressed = false;
+        }
     }
 
     private void Movement(float dt)
     {
         float forwardMovement = m_MoveInput.y;
+
+        m_SpeedMultiplier = m_ShiftPressed ? 2 : 1;
+
 
 #if USE_MRU
         transform.position = transform.position + transform.forward * forwardMovement * m_Speed * dt;
@@ -109,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
 
 #elif USE_RIGIDBODY
 
-        Vector3 movement = transform.forward * forwardMovement * m_Speed * dt;
+        Vector3 movement = transform.forward * forwardMovement * m_Speed * m_SpeedMultiplier * dt;
         m_Rigidbody.AddForce(movement);
 
 
@@ -147,7 +161,19 @@ public class PlayerMovement : MonoBehaviour
         transform.Rotate(0, rotationY, 0);
 
 #elif USE_RIGIDBODY
+
+        //Si el jugador no presiona (A/D) el personaje no puede rotar, si los presiona, solo se bloquean la rotacion en los ejes X/Z
+        if (horizontalMovement == 0)
+        {
+            m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
+        }
+        else
+        {
+            m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        }
+
         float rotationY = m_RotationSpeed * horizontalMovement * dt;
+        Debug.Log(rotationY);
         m_Rigidbody.AddTorque(0, rotationY, 0);
 
 #endif
