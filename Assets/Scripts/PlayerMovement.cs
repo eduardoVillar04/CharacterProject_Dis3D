@@ -1,3 +1,7 @@
+#define USE_MRU
+//#define USE_MRUA
+//#define USE_RIGIDBODY
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -76,15 +80,19 @@ public class PlayerMovement : MonoBehaviour
     {
         float forwardMovement = m_MoveInput.y;
 
+#if USE_MRU
+        transform.position = transform.position + transform.forward * forwardMovement * m_Speed * dt;
 
-        if (forwardMovement != 0)
+#elif USE_MRUA
+
+        if(forwardMovement!=0)
         {
             m_Speed += m_Acceleration * forwardMovement * dt;
             Mathf.Clamp(m_Speed, -m_MaxSpeed, m_MaxSpeed);
         }
         else
         {
-            if (Mathf.Abs(m_Speed) > 0.1)
+            if(Mathf.Abs(m_Speed)>0.1)
             {
                 m_Speed = Mathf.Lerp(m_Speed, 0, m_Deceleration * dt);
             }
@@ -98,11 +106,25 @@ public class PlayerMovement : MonoBehaviour
         Vector3 newPosition = transform.position + transform.forward * m_Speed * dt;
 
         transform.position = newPosition;
+
+#elif USE_RIGIDBODY
+
+        Vector3 movement = transform.forward * forwardMovement * m_Speed * dt;
+        m_Rigidbody.AddForce(movement);
+
+
+#endif
     }
 
     private void Rotation(float dt)
     {
         float horizontalMovement = m_MoveInput.x;
+
+#if USE_MRU
+        float rotationY = horizontalMovement * m_RotationSpeed * dt;
+        transform.Rotate(0, rotationY, 0);
+
+#elif USE_MRUA
 
         if(horizontalMovement != 0)
         {
@@ -123,6 +145,12 @@ public class PlayerMovement : MonoBehaviour
 
         float rotationY = m_RotationSpeed * dt;
         transform.Rotate(0, rotationY, 0);
+
+#elif USE_RIGIDBODY
+        float rotationY = m_RotationSpeed * horizontalMovement * dt;
+        m_Rigidbody.AddTorque(0, rotationY, 0);
+
+#endif
     }
 }
 
