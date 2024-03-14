@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour
     public bool m_IsRunning = false;
     private bool m_MeleeAttackInput = false;
     private bool m_IsAttacking = false;
+    private int m_MeleeAttackCounter = 0;
 
     public float m_CurrentSpeed = 5.0f;
     public float m_MaxSpeedWalking = 10.0f;
@@ -40,6 +41,7 @@ public class PlayerMovement : MonoBehaviour
         float dt = Time.deltaTime;
 
         Inputs();
+        Combat();
         Movement(dt);
         Rotation(dt);
         PlayAnimations();
@@ -120,19 +122,40 @@ public class PlayerMovement : MonoBehaviour
         
         if(m_MeleeAttackInput && !m_IsAttacking)
         {
-            m_Animator.SetTrigger("MeleeAttack");
+            //First melee attack
+            m_MeleeAttackCounter = 1;
+            m_Animator.SetTrigger("MeleeAttack1");
         }
     }
 
     private void Combat()
     {
-
+        if (m_MeleeAttackInput && m_IsAttacking) m_MeleeAttackCounter++;
+        Mathf.Clamp(m_MeleeAttackCounter, 1, 3);
+        m_Animator.SetBool("isAttacking", m_IsAttacking);
     }
 
     private void BeginMeleeAttack()
     {
         m_CurrentSpeed = 0;
         m_IsAttacking = true;
+    }
+
+    private void ChangeToSecondMelee()
+    {
+        if (m_MeleeAttackCounter >= 2)
+        {
+            m_MeleeAttackCounter = 2;
+            m_Animator.SetTrigger("MeleeAttack2");
+        }
+    }
+
+    private void ChangeToThirdMelee()
+    {
+        if (m_MeleeAttackCounter >= 3)
+        {
+            m_Animator.SetTrigger("MeleeAttack3");
+        }
     }
 
     private void EndMeleeAttack()
