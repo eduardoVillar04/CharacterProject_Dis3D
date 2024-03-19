@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Assets\UniversityAssets\ExplosiveLLC\Demo Elements\Code\CameraController.cs" />
     <Compile Include="Assets\UniversityAssets\Crafting Mecanim Animation Pack\Code\GUIControls.cs" />
+    <Compile Include="Assets\Scripts\EnemyScript.cs" />
     <Compile Include="Assets\UniversityAssets\Crafting Mecanim Animation Pack\Code\IKHands.cs" />
     <Compile Include="Assets\UniversityAssets\Crafting Mecanim Animation Pack\Code\CrafterController.cs" />
     <Compile Include="Assets\UniversityAssets\Crafting Mecanim Animation Pack\Code\SmoothFollow.cs" />
