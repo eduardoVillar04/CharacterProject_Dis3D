@@ -1,7 +1,10 @@
+#define USE_BINARY_FORMATTER
+//Codigo de Eduardo
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +18,8 @@ public class SaveLoadManager : MonoBehaviour
 
     private static string m_OptionsSaveDataPath = "OptionsSaveData";
     private static string m_GameSaveDataPath = "GameSaveData";
+
+    public Transform m_Player;
 
     private void Awake()
     {
@@ -32,38 +37,70 @@ public class SaveLoadManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        m_Player = GameObject.FindGameObjectWithTag("Player").transform;
+    }
+
     // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.S))
         {
+            m_GameSaveData.m_PlayerPosition = m_Player.position;
             SaveOptionsSaveData();
             SaveGameSaveData();
         }
         if (Input.GetKeyDown(KeyCode.L))
         {
-            LoadFile();
+            LoadOptionsSaveData();
+            LoadGameSaveData();
+            m_Player.position = m_GameSaveData.m_PlayerPosition;
         }
     }
 
     private static void SaveFile(object thisData, string thisPath)
     {
+        //We convert the OptionsSaveData object to a JSON string and encode it
         string json = Encode(JsonUtility.ToJson(thisData));
         //We set the path to the persistent data path, which is a folder that Unity creates to store data
         string path = Path.Combine(Application.persistentDataPath, thisPath);
-        
+
+#if USE_BINARY_FORMATTER
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream stream = new FileStream(path, FileMode.Create);
+        formatter.Serialize(stream, json);
+        stream.Close();
+#else        
         File.WriteAllText(path, json);
+#endif
         Debug.Log("File Saved");
     }
 
-    private static void LoadFile() 
+    private static T LoadFile<T>(string fileName) where T : new() 
     {
-        string path = Path.Combine(Application.persistentDataPath, m_OptionsSaveDataPath);
-        
-        //We read the file and decode it
-        string json = Decode(File.ReadAllText(path));
+        string path = Path.Combine(Application.persistentDataPath, fileName);
+        if(File.Exists(path))
+        {
+#if USE_BINARY_FORMATTER
+            BinaryFormatter formatter = new BinaryFormatter();
+            FileStream stream = new FileStream(path,FileMode.Open);
+            string data = formatter.Deserialize(stream) as string;
+            stream.Close();
+            string json = Decode(data);
+#else
+            //We read the file and decode it
+            string json = Decode(File.ReadAllText(path));
+#endif
+            // We convert the JSON string to an OptionsSaveData object
+            return JsonUtility.FromJson<T>(json);
+        }
+        else
+        {
+            Debug.Log("File does not exist");
+            return new T();
+        }
 
-        m_OptionsSaveData = JsonUtility.FromJson<OptionsSaveData>(json);
     }
 
     public static void SaveOptionsSaveData()
@@ -74,6 +111,16 @@ public class SaveLoadManager : MonoBehaviour
     public static void SaveGameSaveData()
     {
         SaveFile(m_Instance.m_GameSaveData, m_GameSaveDataPath);
+    }
+
+    public static void LoadOptionsSaveData()
+    {
+        m_Instance.m_OptionsSaveData = LoadFile<OptionsSaveData>(m_OptionsSaveDataPath);
+    }
+
+    public static void LoadGameSaveData()
+    {
+        m_Instance.m_GameSaveData = LoadFile<GameSaveData>(m_GameSaveDataPath);
     }
 
     private static string Encode(string toEncode)
